@@ -1,157 +1,143 @@
--- =============================================
---   🔥 DZ HUB [ภาษาไทย] 
---   UI สวยงามเหมือนต้นฉบับ พร้อมฟังก์ชันครบ
---   ไม่ต้องใช้คีย์
--- =============================================
+-- == Basic Utility Script ==
+-- ใช้ได้กับ executor ที่รองรับ loadstring และ基本的な API
 
--- ส่วนแสดงผล UI หลัก
-local player = game.Players.LocalPlayer
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "DzHub"
-screenGui.Parent = player.PlayerGui
+local Players = game:GetService("Players")
+local Lighting = game:GetService("Lighting")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
 
--- ฟังก์ชันสร้างปุ่มหลัก (ทรงกลม สีส้ม)
-local function createMainButton()
-    local button = Instance.new("ImageButton")
-    button.Size = UDim2.new(0, 55, 0, 55)
-    button.Position = UDim2.new(0, 15, 0, 100)
-    button.BackgroundColor3 = Color3.fromRGB(255, 170, 0)
-    button.BackgroundTransparency = 0.2
-    button.Image = "rbxassetid://" .. (button.Image or "0")
-    button.ImageColor3 = Color3.fromRGB(255, 255, 255)
-    button.ImageTransparency = 0.5
-    button.Parent = screenGui
-
-    -- ข้อความบนปุ่ม
-    local text = Instance.new("TextLabel")
-    text.Size = UDim2.new(1, 0, 1, 0)
-    text.BackgroundTransparency = 1
-    text.Text = "Dz"
-    text.TextColor3 = Color3.fromRGB(255, 255, 255)
-    text.TextScaled = true
-    text.Font = Enum.Font.GothamBold
-    text.Parent = button
-
-    return button
-end
-
--- ฟังก์ชันสร้างเมนูหลัก
-local function createMenu()
-    local menu = Instance.new("Frame")
-    menu.Size = UDim2.new(0, 350, 0, 450)
-    menu.Position = UDim2.new(0.5, -175, 0.5, -225)
-    menu.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-    menu.BackgroundTransparency = 0.1
-    menu.BorderSizePixel = 0
-    menu.Parent = screenGui
-
-    -- หัวข้อเมนู
-    local title = Instance.new("TextLabel")
-    title.Size = UDim2.new(1, 0, 0, 45)
-    title.BackgroundColor3 = Color3.fromRGB(255, 170, 0)
-    title.Text = "🔥 DZ HUB [ภาษาไทย]"
-    title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    title.TextScaled = true
-    title.Font = Enum.Font.GothamBold
-    title.Parent = menu
-
-    -- ปุ่มปิดเมนู (X)
-    local closeBtn = Instance.new("TextButton")
-    closeBtn.Size = UDim2.new(0, 30, 0, 30)
-    closeBtn.Position = UDim2.new(1, -35, 0, 7)
-    closeBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-    closeBtn.Text = "X"
-    closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    closeBtn.TextScaled = true
-    closeBtn.Font = Enum.Font.GothamBold
-    closeBtn.Parent = menu
-    closeBtn.MouseButton1Click:Connect(function()
-        menu:Destroy()
-    end)
-
-    -- ฟังก์ชันช่วยสร้างปุ่มในเมนู
-    local function createButton(text, yPos, color, callback)
-        local btn = Instance.new("TextButton")
-        btn.Size = UDim2.new(0.85, 0, 0, 35)
-        btn.Position = UDim2.new(0.075, 0, yPos, 0)
-        btn.BackgroundColor3 = color
-        btn.Text = text
-        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        btn.TextScaled = true
-        btn.Font = Enum.Font.GothamMedium
-        btn.BorderSizePixel = 0
-        btn.Parent = menu
-        btn.MouseButton1Click:Connect(callback)
-        return btn
+-- ===== 1. Fullbright =====
+local function enableFullbright()
+    Lighting.Brightness = 3
+    Lighting.ClockTime = 14
+    Lighting.FogEnd = 100000
+    Lighting.GlobalShadows = false
+    Lighting.OutdoorAmbient = Color3.fromRGB(178, 178, 178)
+    for _, v in pairs(Lighting:GetChildren()) do
+        if v:IsA("PostEffect") then
+            v.Enabled = false
+        end
     end
-
-    -- กำหนดตำแหน่ง Y เริ่มต้น
-    local y = 0.13
-
-    -- ปุ่มฟังก์ชันต่างๆ (เหมือน DzHub ทุกประการ)
-    createButton("⚔️ เปิด Auto Farm", y, Color3.fromRGB(60, 60, 200), function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/6Wumpus6/SpyHub/main/ShindoLife", true))()
-        print("✅ Auto Farm เปิดแล้ว!")
-    end)
-    y = y + 0.09
-
-    createButton("🔄 หมุน Bloodline 50 ครั้ง", y, Color3.fromRGB(200, 150, 50), function()
-        for i = 1, 50 do
-            player.startevent:FireServer("spin", "kg1")
-            task.wait(0.1)
-        end
-        print("✅ หมุน Bloodline ครบ 50 รอบ!")
-    end)
-    y = y + 0.09
-
-    createButton("⚡ หมุน Element 50 ครั้ง", y, Color3.fromRGB(100, 200, 255), function()
-        for i = 1, 50 do
-            player.startevent:FireServer("spin", "element1")
-            task.wait(0.1)
-        end
-        print("✅ หมุน Element ครบ 50 รอบ!")
-    end)
-    y = y + 0.09
-
-    createButton("📍 ไป Shindai Valley", y, Color3.fromRGB(50, 200, 100), function()
-        player.Character.HumanoidRootPart.CFrame = CFrame.new(-2500, 100, -2500)
-        print("✅ ไป Shindai Valley แล้ว!")
-    end)
-    y = y + 0.09
-
-    createButton("📍 ไป Dunes Village", y, Color3.fromRGB(50, 200, 100), function()
-        player.Character.HumanoidRootPart.CFrame = CFrame.new(2000, 50, 2000)
-        print("✅ ไป Dunes Village แล้ว!")
-    end)
-    y = y + 0.09
-
-    createButton("🧬 เปลี่ยนเป็น Akuma", y, Color3.fromRGB(150, 50, 200), function()
-        player.startevent:FireServer("equipkg", player.statz.main["kg1"])
-        print("✅ เปลี่ยนเป็น Akuma!")
-    end)
-    y = y + 0.09
-
-    createButton("🧬 เปลี่ยนเป็น Rengoku", y, Color3.fromRGB(150, 50, 200), function()
-        player.startevent:FireServer("equipkg", player.statz.main["kg2"])
-        print("✅ เปลี่ยนเป็น Rengoku!")
-    end)
-    y = y + 0.09
-
-    createButton("✈️ เปิดโหมดบิน", y, Color3.fromRGB(0, 150, 255), function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/TerminalZer0/ShindoLife/main/Fly"))()
-        print("✅ เปิดโหมดบิน!")
-    end)
-    y = y + 0.09
-
-    createButton("🔄 รีเซ็ตสเตตัส", y, Color3.fromRGB(200, 50, 50), function()
-        player.startevent:FireServer("resetstats")
-        print("✅ รีเซ็ตสเตตัสแล้ว!")
-    end)
+    print("[✓] Fullbright เปิดใช้งาน")
 end
 
--- สร้างปุ่มหลักและเชื่อมกับการเปิดเมนู
-local mainButton = createMainButton()
-mainButton.MouseButton1Click:Connect(createMenu)
+-- ===== 2. Noclip =====
+local noclipEnabled = false
+local noclipConn
 
-print("✅ DZ HUB [ภาษาไทย] โหลดสำเร็จ!")
-print("💡 กดปุ่ม Dz ที่มุมซ้ายเพื่อเปิดเมนู")
+local function toggleNoclip(state)
+    noclipEnabled = state
+    if noclipConn then noclipConn:Disconnect() end
+    if state then
+        noclipConn = RunService.Stepped:Connect(function()
+            if LocalPlayer.Character then
+                for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
+                    if part:IsA("BasePart") and part.CanCollide then
+                        part.CanCollide = false
+                    end
+                end
+            end
+        end)
+        print("[✓] Noclip เปิด")
+    else
+        print("[✗] Noclip ปิด")
+    end
+end
+
+-- ===== 3. Godmode (กึ่งสำเร็จรูป) =====
+-- หมายเหตุ: Godmode จริงๆ ต้องพึ่งช่องโหว่ของเกมนั้นๆ
+-- ที่ทำได้ทั่วไปคือการทำให้ Humanoid ไม่รับความเสียหาย
+local godmodeEnabled = false
+
+local function toggleGodmode(state)
+    godmodeEnabled = state
+    local char = LocalPlayer.Character
+    if not char then return end
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        if state then
+            humanoid.MaxHealth = math.huge
+            humanoid.Health = math.huge
+            print("[✓] Godmode เปิด (แบบ MaxHealth)")
+        else
+            humanoid.MaxHealth = 100
+            humanoid.Health = 100
+            print("[✗] Godmode ปิด")
+        end
+    end
+end
+
+-- ===== 4. Save Spot (จำตำแหน่ง) =====
+local savedPosition = nil
+local savedCFrame = nil
+
+local function saveSpot()
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        savedCFrame = char.HumanoidRootPart.CFrame
+        savedPosition = savedCFrame.Position
+        print("[✓] บันทึกตำแหน่ง: " .. tostring(savedPosition))
+    else
+        warn("[✗] ไม่พบตัวละคร")
+    end
+end
+
+local function teleportToSpot()
+    if not savedCFrame then
+        warn("[✗] ยังไม่ได้บันทึกตำแหน่ง")
+        return
+    end
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        char.HumanoidRootPart.CFrame = savedCFrame
+        print("[✓] วาร์ปกลับตำแหน่งที่บันทึก")
+    end
+end
+
+-- ===== เมนู GUI แบบง่าย =====
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "UtilityGui"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 220, 0, 280)
+Frame.Position = UDim2.new(0, 20, 0, 100)
+Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Frame.BorderSizePixel = 0
+Frame.Active = true
+Frame.Draggable = true
+Frame.Parent = ScreenGui
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+Title.Text = "Utility Script"
+Title.TextColor3 = Color3.new(1, 1, 1)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 14
+Title.Parent = Frame
+
+local function makeButton(text, yPos, callback)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, -20, 0, 35)
+    btn.Position = UDim2.new(0, 10, 0, yPos)
+    btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    btn.TextColor3 = Color3.new(1, 1, 1)
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 13
+    btn.Text = text
+    btn.Parent = Frame
+    btn.MouseButton1Click:Connect(callback)
+    return btn
+end
+
+makeButton("Fullbright", 40, enableFullbright)
+makeButton("Toggle Noclip", 80, function() toggleNoclip(not noclipEnabled) end)
+makeButton("Toggle Godmode", 120, function() toggleGodmode(not godmodeEnabled) end)
+makeButton("Save Spot", 160, saveSpot)
+makeButton("Teleport to Spot", 200, teleportToSpot)
+makeButton("ปิดเมนู", 240, function() ScreenGui:Destroy() end)
+
+print("[✓] โหลดสคริปต์สำเร็จ")
