@@ -116,7 +116,7 @@ RunService.RenderStepped:Connect(function()
 
     if not humanoidRootPart or not humanoid or humanoid.Health <= 0 then return end
 
-    -- ระบบ Auto Hit / ปัดบอลอัตโนมัติ (ดึงผ่าน ArenaRemotes)
+    -- 1. Auto Hit / ปัดบอลอัตโนมัติ
     if settings.AutoHit then
         pcall(function()
             local arenaRemotes = ReplicatedStorage:FindFirstChild("ArenaRemotes")
@@ -130,7 +130,7 @@ RunService.RenderStepped:Connect(function()
         end)
     end
 
-    -- ระบบ Auto Farm / เดินเข้าหาวัตถุใน Workspace อัตโนมัติ
+    -- 2. Auto Farm / เดินเข้าหาเป้าหมาย
     if settings.AutoFarm then
         pcall(function()
             for _, obj in ipairs(Workspace:GetChildren()) do
@@ -148,15 +148,17 @@ RunService.RenderStepped:Connect(function()
         end)
     end
 
-    -- ระบบ Auto Dodge หลบวัตถุรอบตัว
+    -- 3. Auto Dodge อัปเกรด (กวาดหาวัตถุที่กำลังพุ่งเข้าหาตัวในระยะประชิด)
     if settings.AutoDodge then
         pcall(function()
-            for _, obj in ipairs(Workspace:GetChildren()) do
-                if obj:IsA("BasePart") and obj ~= humanoidRootPart then
+            for _, obj in ipairs(Workspace:GetDescendants()) do
+                if obj:IsA("BasePart") and obj ~= humanoidRootPart and not obj:IsDescendantOf(character) then
                     local distance = (humanoidRootPart.Position - obj.Position).Magnitude
-                    if distance <= 15 then
-                        local randomOffset = Vector3.new(math.random(-15, 15), 0, math.random(-15, 15))
-                        humanoid:MoveTo(humanoidRootPart.Position + randomOffset)
+                    -- ขยายระยะตรวจจับเป็น 25 studs และเช็คว่าวัตถุขยับหรือพุ่งมาทางเราไหม
+                    if distance <= 25 then
+                        -- สั่งแดช/พุ่งหลบออกด้านข้างทันทีด้วยความเร็วสูง
+                        local evadePos = humanoidRootPart.Position + ((humanoidRootPart.CFrame.RightVector * math.random(-1, 1) * 20) + Vector3.new(math.random(-15, 15), 0, math.random(-15, 15)))
+                        humanoid:MoveTo(evadePos)
                         break
                     end
                 end
@@ -164,4 +166,3 @@ RunService.RenderStepped:Connect(function()
         end)
     end
 end)
-
