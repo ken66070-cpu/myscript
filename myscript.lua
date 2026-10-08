@@ -16,8 +16,8 @@ screenGui.ResetOnSpawn = false
 screenGui.Parent = CoreGui
 
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 260, 0, 220)
-mainFrame.Position = UDim2.new(0.5, -130, 0.5, -110)
+mainFrame.Size = UDim2.new(0, 260, 0, 200)
+mainFrame.Position = UDim2.new(0.5, -130, 0.5, -100)
 mainFrame.BackgroundColor3 = Color3.fromRGB(35, 30, 45)
 mainFrame.BorderSizePixel = 0
 mainFrame.Active = true
@@ -29,104 +29,91 @@ uiCorner.CornerRadius = UDim.new(0, 8)
 uiCorner.Parent = mainFrame
 
 local titleLabel = Instance.new("TextLabel")
-titleLabel.Size = UDim2.new(1, 0, 0, 40)
+titleLabel.Size = UDim2.new(1, 0, 0, 35)
 titleLabel.BackgroundColor3 = Color3.fromRGB(55, 45, 65)
-titleLabel.Text = "Slayers 2 - Helper Hub"
+titleLabel.Text = "Slayers 2 - Boss & Loot"
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 titleLabel.TextSize = 16
 titleLabel.Font = Enum.Font.GothamBold
 titleLabel.Parent = mainFrame
 
-local titleCorner = Instance.new("UICorner")
-titleCorner.CornerRadius = UDim.new(0, 8)
-titleCorner.Parent = titleLabel
+local tCorner = Instance.new("UICorner")
+tCorner.CornerRadius = UDim.new(0, 8)
+tCorner.Parent = titleLabel
 
-local settings = {
-    AutoChests = false,
-    AutoDrops = false,
-    AutoTarget = false,
+local toggles = {
+    AutoLoot = false,
+    AutoBoss = false
 }
 
-local function createToggle(name, yPos, callback)
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.new(0, 220, 0, 35)
-    button.Position = UDim2.new(0.5, -110, 0, yPos)
-    button.BackgroundColor3 = Color3.fromRGB(60, 50, 80)
-    button.Text = name .. ": ปิด"
-    button.TextColor3 = Color3.fromRGB(255, 100, 100)
-    button.TextSize = 14
-    button.Font = Enum.Font.GothamSemibold
-    button.Parent = mainFrame
+local function addBtn(name, y, key)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 220, 0, 35)
+    btn.Position = UDim2.new(0.5, -110, 0, y)
+    btn.BackgroundColor3 = Color3.fromRGB(60, 50, 80)
+    btn.Text = name .. ": ปิด"
+    btn.TextColor3 = Color3.fromRGB(255, 100, 100)
+    btn.TextSize = 14
+    btn.Font = Enum.Font.GothamSemibold
+    btn.Parent = mainFrame
 
-    local btnCorner = Instance.new("UICorner")
-    btnCorner.CornerRadius = UDim.new(0, 6)
-    btnCorner.Parent = button
+    local bc = Instance.new("UICorner")
+    bc.CornerRadius = UDim.new(0, 6)
+    bc.Parent = btn
 
-    local state = false
-    button.MouseButton1Click:Connect(function()
-        state = not state
-        if state then
-            button.Text = name .. ": เปิด"
-            button.TextColor3 = Color3.fromRGB(100, 255, 100)
-            button.BackgroundColor3 = Color3.fromRGB(50, 100, 50)
+    btn.MouseButton1Click:Connect(function()
+        toggles[key] = not toggles[key]
+        if toggles[key] then
+            btn.Text = name .. ": เปิด"
+            btn.TextColor3 = Color3.fromRGB(100, 255, 100)
+            btn.BackgroundColor3 = Color3.fromRGB(50, 100, 50)
         else
-            button.Text = name .. ": ปิด"
-            button.TextColor3 = Color3.fromRGB(255, 100, 100)
-            button.BackgroundColor3 = Color3.fromRGB(60, 50, 80)
+            btn.Text = name .. ": ปิด"
+            btn.TextColor3 = Color3.fromRGB(255, 100, 100)
+            btn.BackgroundColor3 = Color3.fromRGB(60, 50, 80)
         end
-        callback(state)
     end)
 end
 
-createToggle("ออโต้เก็บกล่องสมบัติ", 50, function(state)
-    settings.AutoChests = state
-end)
+addBtn("ออโต้ดูดไอเทมดรอป/กล่อง", 45, "AutoLoot")
+addBtn("ออโต้ฟาร์มบอส/มอนสเตอร์", 90, "AutoBoss")
 
-createToggle("ออโต้เก็บไอเทมดรอป", 95, function(state)
-    settings.AutoDrops = state
-end)
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 220, 0, 30)
+closeBtn.Position = UDim2.new(0.5, -110, 0, 145)
+closeBtn.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
+closeBtn.Text = "ปิดเมนู"
+closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeBtn.TextSize = 12
+closeBtn.Font = Enum.Font.Gotham
+closeBtn.Parent = mainFrame
 
-createToggle("ออโต้เข้าหาเป้าหมาย/มอน", 140, function(state)
-    settings.AutoTarget = state
-end)
+local cc = Instance.new("UICorner")
+cc.CornerRadius = UDim.new(0, 6)
+cc.Parent = closeBtn
 
-local closeButton = Instance.new("TextButton")
-closeButton.Size = UDim2.new(0, 220, 0, 25)
-closeButton.Position = UDim2.new(0.5, -110, 0, 185)
-closeButton.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
-closeButton.Text = "ปิด / ซ่อนเมนู"
-closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-closeButton.TextSize = 12
-closeButton.Font = Enum.Font.Gotham
-closeButton.Parent = mainFrame
-
-local closeCorner = Instance.new("UICorner")
-closeCorner.CornerRadius = UDim.new(0, 6)
-closeCorner.Parent = closeButton
-
-closeButton.MouseButton1Click:Connect(function()
+closeBtn.MouseButton1Click:Connect(function()
     screenGui:Destroy()
 end)
 
 RunService.RenderStepped:Connect(function()
-    local character = player.Character
-    if not character then return end
-    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-    local humanoid = character:FindFirstChild("Humanoid")
+    local char = player.Character
+    if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    local hum = char:FindFirstChild("Humanoid")
+    if not hrp or not hum or hum.Health <= 0 then return end
 
-    if not humanoidRootPart or not humanoid or humanoid.Health <= 0 then return end
-
-    if settings.AutoChests then
+    -- 1. ระบบดูดไอเทมดรอปและกล่องมาหาตัวทันที (LootDrops & Chests)
+    if toggles.AutoLoot then
         pcall(function()
-            local chestsFolder = Workspace:FindFirstChild("Chests")
-            if chestsFolder then
-                for _, chest in ipairs(chestsFolder:GetChildren()) do
-                    local targetPart = chest:IsA("BasePart") and chest or chest.PrimaryPart or chest:FindFirstChildWhichIsA("BasePart")
-                    if targetPart then
-                        local dist = (humanoidRootPart.Position - targetPart.Position).Magnitude
-                        if dist < 100 then
-                            humanoid:MoveTo(targetPart.Position)
-                            break
+            local folders = {Workspace:FindFirstChild("LootDrops"), Workspace:FindFirstChild("Chests")}
+            for _, folder in ipairs(folders) do
+                if folder then
+                    for _, item in ipairs(folder:GetChildren()) do
+                        local part = item:IsA("BasePart") and item or item:FindFirstChildWhichIsA("BasePart")
+                        if part then
+                            -- วาปไอเทมมาหาตัวผู้เล่น เพื่อเก็บอัตโนมัติทันที
+                            part.CFrame = hrp.CFrame + Vector3.new(0, 1, 0)
                         end
                     end
                 end
@@ -134,41 +121,33 @@ RunService.RenderStepped:Connect(function()
         end)
     end
 
-    if settings.AutoDrops then
-        pcall(function()
-            local dropsFolder = Workspace:FindFirstChild("LootDrops")
-            if dropsFolder then
-                for _, drop in ipairs(dropsFolder:GetChildren()) do
-                    local targetPart = drop:IsA("BasePart") and drop or drop:FindFirstChildWhichIsA("BasePart")
-                    if targetPart then
-                        local dist = (humanoidRootPart.Position - targetPart.Position).Magnitude
-                        if dist < 100 then
-                            humanoid:MoveTo(targetPart.Position)
-                            break
-                        end
-                    end
-                end
-            end
-        end)
-    end
-
-    if settings.AutoTarget then
+    -- 2. ระบบออโต้ฟาร์มบอส/มอนสเตอร์ (วาร์ปไปประชิดและจำลองการตี)
+    if toggles.AutoBoss then
         pcall(function()
             local humanoidsFolder = Workspace:FindFirstChild("Humanoids")
             if humanoidsFolder then
                 for _, enemy in ipairs(humanoidsFolder:GetChildren()) do
-                    local hrp = enemy:FindFirstChild("HumanoidRootPart")
-                    local hum = enemy:FindFirstChild("Humanoid")
-                    if hrp and hum and hum.Health > 0 and enemy ~= character then
-                        local dist = (humanoidRootPart.Position - hrp.Position).Magnitude
-                        if dist < 80 and dist > 5 then
-                            humanoid:MoveTo(hrp.Position)
-                            break
+                    local eh = enemy:FindFirstChild("Humanoid")
+                    local ehrp = enemy:FindFirstChild("HumanoidRootPart")
+                    if eh and ehrp and eh.Health > 0 and enemy ~= char then
+                        -- วาปตัวเราไปอยู่ใกล้ๆ บอส/มอนสเตอร์ ด้านหน้าแบบประชิด
+                        hrp.CFrame = ehrp.CFrame * CFrame.new(0, 0, 3)
+                        
+                        -- สั่งให้ตัวละครใช้เครื่องมือ (Tool) ในช่องเก็บของโจมตีอัตโนมัติ
+                        for _, tool in ipairs(player.Backpack:GetChildren()) do
+                            if tool:IsA("Tool") then
+                                tool.Parent = char
+                            end
                         end
+                        for _, tool in ipairs(char:GetChildren()) do
+                            if tool:IsA("Tool") then
+                                tool:Activate()
+                            end
+                        end
+                        break
                     end
                 end
             end
         end)
     end
 end)
-
