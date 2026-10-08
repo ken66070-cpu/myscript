@@ -31,7 +31,7 @@ uiCorner.Parent = mainFrame
 local titleLabel = Instance.new("TextLabel")
 titleLabel.Size = UDim2.new(1, 0, 0, 40)
 titleLabel.BackgroundColor3 = Color3.fromRGB(45, 45, 65)
-titleLabel.Text = "Anime Ball Hub (Auto)"
+titleLabel.Text = "อนิเมะบอลฮับ (ภาษาไทย)"
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 titleLabel.TextSize = 16
 titleLabel.Font = Enum.Font.GothamBold
@@ -52,7 +52,7 @@ local function createToggle(name, yPos, callback)
     button.Size = UDim2.new(0, 220, 0, 35)
     button.Position = UDim2.new(0.5, -110, 0, yPos)
     button.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
-    button.Text = name .. ": OFF"
+    button.Text = name .. ": ปิด"
     button.TextColor3 = Color3.fromRGB(255, 100, 100)
     button.TextSize = 14
     button.Font = Enum.Font.GothamSemibold
@@ -66,11 +66,11 @@ local function createToggle(name, yPos, callback)
     button.MouseButton1Click:Connect(function()
         state = not state
         if state then
-            button.Text = name .. ": ON"
+            button.Text = name .. ": เปิด"
             button.TextColor3 = Color3.fromRGB(100, 255, 100)
             button.BackgroundColor3 = Color3.fromRGB(50, 100, 50)
         else
-            button.Text = name .. ": OFF"
+            button.Text = name .. ": ปิด"
             button.TextColor3 = Color3.fromRGB(255, 100, 100)
             button.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
         end
@@ -78,15 +78,15 @@ local function createToggle(name, yPos, callback)
     end)
 end
 
-createToggle("Auto Hit / Parry", 50, function(state)
+createToggle("ตีบอลอัตโนมัติ", 50, function(state)
     settings.AutoHit = state
 end)
 
-createToggle("Auto Farm / Move", 95, function(state)
+createToggle("เดินเข้าหาบอลออโต้", 95, function(state)
     settings.AutoFarm = state
 end)
 
-createToggle("Auto Dodge Skills", 140, function(state)
+createToggle("ระบบหลบสกิลอัจฉริยะ", 140, function(state)
     settings.AutoDodge = state
 end)
 
@@ -94,7 +94,7 @@ local closeButton = Instance.new("TextButton")
 closeButton.Size = UDim2.new(0, 220, 0, 25)
 closeButton.Position = UDim2.new(0.5, -110, 0, 185)
 closeButton.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
-closeButton.Text = "Close / Unload Hub"
+closeButton.Text = "ปิด / ซ่อนเมนู"
 closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 closeButton.TextSize = 12
 closeButton.Font = Enum.Font.Gotham
@@ -108,6 +108,12 @@ closeButton.MouseButton1Click:Connect(function()
     screenGui:Destroy()
 end)
 
+-- เช็คว่าอยู่ในสนามแข่งจริงหรือไม่
+local function isInArena()
+    local arenaMapLive = Workspace:FindFirstChild("ArenaMapLive")
+    return arenaMapLive and #arenaMapLive:GetChildren() > 0
+end
+
 RunService.RenderStepped:Connect(function()
     local character = player.Character
     if not character then return end
@@ -116,6 +122,10 @@ RunService.RenderStepped:Connect(function()
 
     if not humanoidRootPart or not humanoid or humanoid.Health <= 0 then return end
 
+    -- ถ้าอยู่ล็อบบี้จะไม่ทำงาน ป้องกันการเดินมั่ว
+    if not isInArena() then return end
+
+    -- 1. ตีบอลอัตโนมัติ
     if settings.AutoHit then
         pcall(function()
             local arenaRemotes = ReplicatedStorage:FindFirstChild("ArenaRemotes")
@@ -129,14 +139,15 @@ RunService.RenderStepped:Connect(function()
         end)
     end
 
+    -- 2. เดินเข้าหาบอลเฉพาะในแมตช์
     if settings.AutoFarm then
         pcall(function()
             for _, obj in ipairs(Workspace:GetChildren()) do
-                if obj:IsA("BasePart") or obj:FindFirstChild("HumanoidRootPart") then
-                    local targetPart = obj:IsA("BasePart") and obj or obj.HumanoidRootPart
+                if obj.Name:lower().match("ball") or obj.Name:lower().match("part") then
+                    local targetPart = obj:IsA("BasePart") and obj or (obj:FindFirstChild("HumanoidRootPart") and obj.HumanoidRootPart)
                     if targetPart and targetPart ~= humanoidRootPart then
                         local distance = (humanoidRootPart.Position - targetPart.Position).Magnitude
-                        if distance < 80 and distance > 10 then
+                        if distance < 60 and distance > 5 then
                             humanoid:MoveTo(targetPart.Position)
                             break
                         end
@@ -146,15 +157,27 @@ RunService.RenderStepped:Connect(function()
         end)
     end
 
+    -- 3. ระบบหลบสกิลขั้นสูง (ขยายระยะ + เคลื่อนที่เนียนๆ ก่อนพุ่งหลบ)
     if settings.AutoDodge then
         pcall(function()
             for _, obj in ipairs(Workspace:GetDescendants()) do
                 if obj:IsA("BasePart") and obj ~= humanoidRootPart and not obj:IsDescendantOf(character) then
                     local distance = (humanoidRootPart.Position - obj.Position).Magnitude
-                    if distance <= 25 then
-                        local evadePos = humanoidRootPart.Position + ((humanoidRootPart.CFrame.RightVector * math.random(-1, 1) * 20) + Vector3.new(math.random(-15, 15), 0, math.random(-15, 15)))
-                        humanoid:MoveTo(evadePos)
+                    
+                    -- ถ้าระยะปานกลาง (35 Studs) เริ่มเคลื่อนไหวเตรียมตัวแบบเนียนๆ
+                    if distance <= 35 and distance > 18 then
+                        local subtleMove = humanoidRootPart.Position + (humanoidRootPart.CFrame.RightVector * math.random(-10, 10))
+                        humanoid.WalkSpeed = 18 -- เพิ่มความเร็วเดินนิดหน่อยให้ดูสมจริง
+                        humanoid:MoveTo(subtleMove)
                         break
+                    -- พอเข้ามาใกล้ในระยะอันตราย (<= 18 Studs) สั่งพุ่งหลบออกด้านข้างทันที
+                    elseif distance <= 18 then
+                        local emergencySide = humanoidRootPart.CFrame.RightVector * (math.random(0, 1) == 1 and 30 or -30)
+                        humanoid.WalkSpeed = 22 -- เร่งความเร็วพุ่งหลบฉุกเฉิน
+                        humanoid:MoveTo(humanoidRootPart.Position + emergencySide)
+                        break
+                    else
+                        humanoid.WalkSpeed = 16 -- คืนค่าความเร็วปกติ
                     end
                 end
             end
