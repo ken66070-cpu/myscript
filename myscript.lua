@@ -33,7 +33,7 @@ titleLabel.Size = UDim2.new(1, 0, 0, 40)
 titleLabel.BackgroundColor3 = Color3.fromRGB(55, 45, 65)
 titleLabel.Text = "Slayers 2 - Helper Hub"
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-titleLabel.TextSize: 16
+titleLabel.TextSize = 16
 titleLabel.Font = Enum.Font.GothamBold
 titleLabel.Parent = mainFrame
 
@@ -116,7 +116,6 @@ RunService.RenderStepped:Connect(function()
 
     if not humanoidRootPart or not humanoid or humanoid.Health <= 0 then return end
 
-    -- 1. ออโต้เก็บกล่องสมบัติ (Chests)
     if settings.AutoChests then
         pcall(function()
             local chestsFolder = Workspace:FindFirstChild("Chests")
@@ -135,7 +134,6 @@ RunService.RenderStepped:Connect(function()
         end)
     end
 
-    -- 2. ออโต้เก็บไอเทมดรอป (LootDrops)
     if settings.AutoDrops then
         pcall(function()
             local dropsFolder = Workspace:FindFirstChild("LootDrops")
@@ -154,7 +152,6 @@ RunService.RenderStepped:Connect(function()
         end)
     end
 
-    -- 3. ออโต้เข้าหามอนสเตอร์/เป้าหมาย (Humanoids)
     if settings.AutoTarget then
         pcall(function()
             local humanoidsFolder = Workspace:FindFirstChild("Humanoids")
