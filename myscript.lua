@@ -6,19 +6,19 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local player = Players.LocalPlayer
 
-if CoreGui:FindFirstChild("AnimeBallHub") then
-    CoreGui.AnimeBallHub:Destroy()
+if CoreGui:FindFirstChild("Slayers2Hub") then
+    CoreGui.Slayers2Hub:Destroy()
 end
 
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "AnimeBallHub"
+screenGui.Name = "Slayers2Hub"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = CoreGui
 
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 260, 0, 220)
 mainFrame.Position = UDim2.new(0.5, -130, 0.5, -110)
-mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+mainFrame.BackgroundColor3 = Color3.fromRGB(35, 30, 45)
 mainFrame.BorderSizePixel = 0
 mainFrame.Active = true
 mainFrame.Draggable = true
@@ -30,10 +30,10 @@ uiCorner.Parent = mainFrame
 
 local titleLabel = Instance.new("TextLabel")
 titleLabel.Size = UDim2.new(1, 0, 0, 40)
-titleLabel.BackgroundColor3 = Color3.fromRGB(45, 45, 65)
-titleLabel.Text = "การต่อสู้บอลอนิเมะ (Fix V2)"
+titleLabel.BackgroundColor3 = Color3.fromRGB(55, 45, 65)
+titleLabel.Text = "Slayers 2 - Helper Hub"
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-titleLabel.TextSize = 16
+titleLabel.TextSize: 16
 titleLabel.Font = Enum.Font.GothamBold
 titleLabel.Parent = mainFrame
 
@@ -42,16 +42,16 @@ titleCorner.CornerRadius = UDim.new(0, 8)
 titleCorner.Parent = titleLabel
 
 local settings = {
-    AutoHit = false,
-    AutoFarm = false,
-    AutoDodge = false,
+    AutoChests = false,
+    AutoDrops = false,
+    AutoTarget = false,
 }
 
 local function createToggle(name, yPos, callback)
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(0, 220, 0, 35)
     button.Position = UDim2.new(0.5, -110, 0, yPos)
-    button.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+    button.BackgroundColor3 = Color3.fromRGB(60, 50, 80)
     button.Text = name .. ": ปิด"
     button.TextColor3 = Color3.fromRGB(255, 100, 100)
     button.TextSize = 14
@@ -72,22 +72,22 @@ local function createToggle(name, yPos, callback)
         else
             button.Text = name .. ": ปิด"
             button.TextColor3 = Color3.fromRGB(255, 100, 100)
-            button.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+            button.BackgroundColor3 = Color3.fromRGB(60, 50, 80)
         end
         callback(state)
     end)
 end
 
-createToggle("ตีบอลอัตโนมัติ", 50, function(state)
-    settings.AutoHit = state
+createToggle("ออโต้เก็บกล่องสมบัติ", 50, function(state)
+    settings.AutoChests = state
 end)
 
-createToggle("เดินเข้าหาบอลออโต้", 95, function(state)
-    settings.AutoFarm = state
+createToggle("ออโต้เก็บไอเทมดรอป", 95, function(state)
+    settings.AutoDrops = state
 end)
 
-createToggle("ระบบหลบสกิลอัจฉริยะ", 140, function(state)
-    settings.AutoDodge = state
+createToggle("ออโต้เข้าหาเป้าหมาย/มอน", 140, function(state)
+    settings.AutoTarget = state
 end)
 
 local closeButton = Instance.new("TextButton")
@@ -108,16 +108,6 @@ closeButton.MouseButton1Click:Connect(function()
     screenGui:Destroy()
 end)
 
--- ฟังก์ชันเช็คว่าอยู่ในสนามแข่งจริงหรือไม่ (ดูจาก ArenaMapLive หรือมีผู้เล่นคนอื่นอยู่ในสนาม)
-local function isInArena()
-    local arenaLive = Workspace:FindFirstChild("ArenaMapLive")
-    if arenaLive and #arenaLive:GetChildren() > 0 then
-        return true
-    end
-    -- เช็คเผื่อกรณีแมพเก็บค่าไว้ที่อื่น
-    return false
-end
-
 RunService.RenderStepped:Connect(function()
     local character = player.Character
     if not character then return end
@@ -126,35 +116,16 @@ RunService.RenderStepped:Connect(function()
 
     if not humanoidRootPart or not humanoid or humanoid.Health <= 0 then return end
 
-    -- ถ้าไม่ได้อยู่ในสนามแข่ง (อยู่ล็อบบี้) จะหยุดการทำงานทั้งหมดทันที ป้องกันเดินมั่ว
-    if not isInArena() then return end
-
-    local arenaRemotes = ReplicatedStorage:FindFirstChild("ArenaRemotes")
-
-    -- 1. ตีบอลอัตโนมัติ (ยิงรีโมท Input และ BallEvent ของเกมจริง)
-    if settings.AutoHit and arenaRemotes then
+    -- 1. ออโต้เก็บกล่องสมบัติ (Chests)
+    if settings.AutoChests then
         pcall(function()
-            local inputRemote = arenaRemotes:FindFirstChild("Input")
-            if inputRemote and inputRemote:IsA("RemoteEvent") then
-                inputRemote:FireServer(true)
-            end
-            local ballEvent = arenaRemotes:FindFirstChild("BallEvent")
-            if ballEvent and ballEvent:IsA("RemoteEvent") then
-                ballEvent:FireServer()
-            end
-        end)
-    end
-
-    -- 2. เดินเข้าหาบอลหรือเป้าหมายเฉพาะในแมตช์
-    if settings.AutoFarm then
-        pcall(function()
-            for _, obj in ipairs(Workspace:GetChildren()) do
-                -- ค้นหาวัตถุที่เป็นบอล หรือโมเดลผู้เล่นอื่นในแมตช์
-                if obj.Name:match("BallBoard") or obj.Name:lower().match("ball") or (obj:IsA("Model") and obj ~= character and obj:FindFirstChild("HumanoidRootPart")) then
-                    local targetPart = obj:IsA("BasePart") and obj or (obj:FindFirstChild("HumanoidRootPart") and obj.HumanoidRootPart)
-                    if targetPart and targetPart ~= humanoidRootPart then
-                        local distance = (humanoidRootPart.Position - targetPart.Position).Magnitude
-                        if distance < 70 and distance > 5 then
+            local chestsFolder = Workspace:FindFirstChild("Chests")
+            if chestsFolder then
+                for _, chest in ipairs(chestsFolder:GetChildren()) do
+                    local targetPart = chest:IsA("BasePart") and chest or chest.PrimaryPart or chest:FindFirstChildWhichIsA("BasePart")
+                    if targetPart then
+                        local dist = (humanoidRootPart.Position - targetPart.Position).Magnitude
+                        if dist < 100 then
                             humanoid:MoveTo(targetPart.Position)
                             break
                         end
@@ -164,30 +135,43 @@ RunService.RenderStepped:Connect(function()
         end)
     end
 
-    -- 3. ระบบหลบสกิลอัจฉริยะ (ขยับตัวหลบเมื่อมีวัตถุ/สกิลเข้ามาใกล้)
-    if settings.AutoDodge then
+    -- 2. ออโต้เก็บไอเทมดรอป (LootDrops)
+    if settings.AutoDrops then
         pcall(function()
-            for _, obj in ipairs(Workspace:GetDescendants()) do
-                if obj:IsA("BasePart") and obj ~= humanoidRootPart and not obj:IsDescendantOf(character) then
-                    local distance = (humanoidRootPart.Position - obj.Position).Magnitude
-                    
-                    -- ถ้าระยะ 35 Studs เริ่มขยับตัวเตรียมหลบเบาๆ
-                    if distance <= 35 and distance > 18 then
-                        local subtleMove = humanoidRootPart.Position + (humanoidRootPart.CFrame.RightVector * math.random(-15, 15))
-                        humanoid.WalkSpeed = 18
-                        humanoid:MoveTo(subtleMove)
-                        break
-                    -- ถ้าระยะประชิดอันตราย (<= 18 Studs) พุ่งหลบออกด้านข้างทันที
-                    elseif distance <= 18 then
-                        local emergencySide = humanoidRootPart.CFrame.RightVector * (math.random(0, 1) == 1 and 35 or -35)
-                        humanoid.WalkSpeed = 24
-                        humanoid:MoveTo(humanoidRootPart.Position + emergencySide)
-                        break
-                    else
-                        humanoid.WalkSpeed = 16
+            local dropsFolder = Workspace:FindFirstChild("LootDrops")
+            if dropsFolder then
+                for _, drop in ipairs(dropsFolder:GetChildren()) do
+                    local targetPart = drop:IsA("BasePart") and drop or drop:FindFirstChildWhichIsA("BasePart")
+                    if targetPart then
+                        local dist = (humanoidRootPart.Position - targetPart.Position).Magnitude
+                        if dist < 100 then
+                            humanoid:MoveTo(targetPart.Position)
+                            break
+                        end
+                    end
+                end
+            end
+        end)
+    end
+
+    -- 3. ออโต้เข้าหามอนสเตอร์/เป้าหมาย (Humanoids)
+    if settings.AutoTarget then
+        pcall(function()
+            local humanoidsFolder = Workspace:FindFirstChild("Humanoids")
+            if humanoidsFolder then
+                for _, enemy in ipairs(humanoidsFolder:GetChildren()) do
+                    local hrp = enemy:FindFirstChild("HumanoidRootPart")
+                    local hum = enemy:FindFirstChild("Humanoid")
+                    if hrp and hum and hum.Health > 0 and enemy ~= character then
+                        local dist = (humanoidRootPart.Position - hrp.Position).Magnitude
+                        if dist < 80 and dist > 5 then
+                            humanoid:MoveTo(hrp.Position)
+                            break
+                        end
                     end
                 end
             end
         end)
     end
 end)
+
