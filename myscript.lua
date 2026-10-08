@@ -31,7 +31,7 @@ uiCorner.Parent = mainFrame
 local titleLabel = Instance.new("TextLabel")
 titleLabel.Size = UDim2.new(1, 0, 0, 40)
 titleLabel.BackgroundColor3 = Color3.fromRGB(45, 45, 65)
-titleLabel.Text = "อนิเมะบอลฮับ (ภาษาไทย)"
+titleLabel.Text = "การต่อสู้บอลอนิเมะ (Hub)"
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 titleLabel.TextSize = 16
 titleLabel.Font = Enum.Font.GothamBold
@@ -108,7 +108,7 @@ closeButton.MouseButton1Click:Connect(function()
     screenGui:Destroy()
 end)
 
--- เช็คว่าอยู่ในสนามแข่งจริงหรือไม่
+-- ฟังก์ชันตรวจสอบว่ากำลังอยู่ในสนามต่อสู้จริงหรือไม่
 local function isInArena()
     local arenaMapLive = Workspace:FindFirstChild("ArenaMapLive")
     return arenaMapLive and #arenaMapLive:GetChildren() > 0
@@ -122,16 +122,21 @@ RunService.RenderStepped:Connect(function()
 
     if not humanoidRootPart or not humanoid or humanoid.Health <= 0 then return end
 
-    -- ถ้าอยู่ล็อบบี้จะไม่ทำงาน ป้องกันการเดินมั่ว
+    -- ถ้าอยู่หน้าล็อบบี้ จะไม่สั่งเดินหรือหลบเด็ดขาด ป้องกันการเดินมั่ว
     if not isInArena() then return end
 
-    -- 1. ตีบอลอัตโนมัติ
+    -- 1. ระบบตีบอลอัตโนมัติ (ยิงผ่าน ArenaRemotes ที่ตรวจพบ)
     if settings.AutoHit then
         pcall(function()
             local arenaRemotes = ReplicatedStorage:FindFirstChild("ArenaRemotes")
             if arenaRemotes then
+                local inputRemote = arenaRemotes:FindFirstChild("Input")
+                if inputRemote and inputRemote:IsA("RemoteEvent") then
+                    inputRemote:FireServer(true)
+                end
+                -- สั่งเรียกทุกรีโมตที่เกี่ยวกับการโจมตีเผื่อสำรอง
                 for _, remote in ipairs(arenaRemotes:GetChildren()) do
-                    if remote:IsA("RemoteEvent") and (remote.Name:lower().match("hit") or remote.Name:lower().match("parry") or remote.Name:lower().match("swing")) then
+                    if remote:IsA("RemoteEvent") and (remote.Name:lower().match("hit") or remote.Name:lower().match("parry") or remote.Name:lower().match("event")) then
                         remote:FireServer()
                     end
                 end
@@ -139,15 +144,15 @@ RunService.RenderStepped:Connect(function()
         end)
     end
 
-    -- 2. เดินเข้าหาบอลเฉพาะในแมตช์
+    -- 2. ระบบเดินเข้าหาบอล/เป้าหมายเฉพาะในแมทช์
     if settings.AutoFarm then
         pcall(function()
             for _, obj in ipairs(Workspace:GetChildren()) do
-                if obj.Name:lower().match("ball") or obj.Name:lower().match("part") then
+                if obj.Name:lower().match("ball") or obj.Name:lower().match("part") or obj.Name:lower().match("model") then
                     local targetPart = obj:IsA("BasePart") and obj or (obj:FindFirstChild("HumanoidRootPart") and obj.HumanoidRootPart)
                     if targetPart and targetPart ~= humanoidRootPart then
                         local distance = (humanoidRootPart.Position - targetPart.Position).Magnitude
-                        if distance < 60 and distance > 5 then
+                        if distance < 65 and distance > 4 then
                             humanoid:MoveTo(targetPart.Position)
                             break
                         end
@@ -157,30 +162,31 @@ RunService.RenderStepped:Connect(function()
         end)
     end
 
-    -- 3. ระบบหลบสกิลขั้นสูง (ขยายระยะ + เคลื่อนที่เนียนๆ ก่อนพุ่งหลบ)
+    -- 3. ระบบหลบสกิลอัจฉริยะ (ระยะไกลขยับตัวเนียนๆ / ระยะใกล้พุ่งหลบฉุกเฉิน)
     if settings.AutoDodge then
         pcall(function()
             for _, obj in ipairs(Workspace:GetDescendants()) do
                 if obj:IsA("BasePart") and obj ~= humanoidRootPart and not obj:IsDescendantOf(character) then
                     local distance = (humanoidRootPart.Position - obj.Position).Magnitude
                     
-                    -- ถ้าระยะปานกลาง (35 Studs) เริ่มเคลื่อนไหวเตรียมตัวแบบเนียนๆ
+                    -- ถ้าระยะปานกลาง (35 Studs) ขยับตัวเตรียมหลบแบบเนียนๆ ไม่ให้โป๊ะ
                     if distance <= 35 and distance > 18 then
-                        local subtleMove = humanoidRootPart.Position + (humanoidRootPart.CFrame.RightVector * math.random(-10, 10))
-                        humanoid.WalkSpeed = 18 -- เพิ่มความเร็วเดินนิดหน่อยให้ดูสมจริง
+                        local subtleMove = humanoidRootPart.Position + (humanoidRootPart.CFrame.RightVector * math.random(-12, 12))
+                        humanoid.WalkSpeed = 18
                         humanoid:MoveTo(subtleMove)
                         break
-                    -- พอเข้ามาใกล้ในระยะอันตราย (<= 18 Studs) สั่งพุ่งหลบออกด้านข้างทันที
+                    -- พอเข้ามาใกล้ในระยะอันตราย (<= 18 Studs) สั่งพุ่งหลบออกด้านข้างทันทีอย่างรวดเร็ว
                     elseif distance <= 18 then
-                        local emergencySide = humanoidRootPart.CFrame.RightVector * (math.random(0, 1) == 1 and 30 or -30)
-                        humanoid.WalkSpeed = 22 -- เร่งความเร็วพุ่งหลบฉุกเฉิน
+                        local emergencySide = humanoidRootPart.CFrame.RightVector * (math.random(0, 1) == 1 and 35 or -35)
+                        humanoid.WalkSpeed = 24
                         humanoid:MoveTo(humanoidRootPart.Position + emergencySide)
                         break
                     else
-                        humanoid.WalkSpeed = 16 -- คืนค่าความเร็วปกติ
+                        humanoid.WalkSpeed = 16
                     end
                 end
             end
         end)
     end
 end)
+
