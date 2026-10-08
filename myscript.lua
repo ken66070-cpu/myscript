@@ -1,19 +1,19 @@
+local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local player = Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
 
-if playerGui:FindFirstChild("AnimeBallHub") then
-    playerGui.AnimeBallHub:Destroy()
+if CoreGui:FindFirstChild("AnimeBallHub") then
+    CoreGui.AnimeBallHub:Destroy()
 end
 
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "AnimeBallHub"
 screenGui.ResetOnSpawn = false
-screenGui.Parent = playerGui
+screenGui.Parent = CoreGui
 
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 260, 0, 220)
@@ -116,7 +116,6 @@ RunService.RenderStepped:Connect(function()
 
     if not humanoidRootPart or not humanoid or humanoid.Health <= 0 then return end
 
-    -- 1. Auto Hit / ปัดบอลอัตโนมัติ
     if settings.AutoHit then
         pcall(function()
             local arenaRemotes = ReplicatedStorage:FindFirstChild("ArenaRemotes")
@@ -130,7 +129,6 @@ RunService.RenderStepped:Connect(function()
         end)
     end
 
-    -- 2. Auto Farm / เดินเข้าหาเป้าหมาย
     if settings.AutoFarm then
         pcall(function()
             for _, obj in ipairs(Workspace:GetChildren()) do
@@ -148,15 +146,12 @@ RunService.RenderStepped:Connect(function()
         end)
     end
 
-    -- 3. Auto Dodge อัปเกรด (กวาดหาวัตถุที่กำลังพุ่งเข้าหาตัวในระยะประชิด)
     if settings.AutoDodge then
         pcall(function()
             for _, obj in ipairs(Workspace:GetDescendants()) do
                 if obj:IsA("BasePart") and obj ~= humanoidRootPart and not obj:IsDescendantOf(character) then
                     local distance = (humanoidRootPart.Position - obj.Position).Magnitude
-                    -- ขยายระยะตรวจจับเป็น 25 studs และเช็คว่าวัตถุขยับหรือพุ่งมาทางเราไหม
                     if distance <= 25 then
-                        -- สั่งแดช/พุ่งหลบออกด้านข้างทันทีด้วยความเร็วสูง
                         local evadePos = humanoidRootPart.Position + ((humanoidRootPart.CFrame.RightVector * math.random(-1, 1) * 20) + Vector3.new(math.random(-15, 15), 0, math.random(-15, 15)))
                         humanoid:MoveTo(evadePos)
                         break
