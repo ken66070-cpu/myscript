@@ -116,46 +116,48 @@ RunService.RenderStepped:Connect(function()
 
     if not humanoidRootPart or not humanoid or humanoid.Health <= 0 then return end
 
+    -- ระบบ Auto Hit / ปัดบอลอัตโนมัติ (ดึงผ่าน ArenaRemotes)
     if settings.AutoHit then
         pcall(function()
-            local remoteFolder = ReplicatedStorage:FindFirstChild("Remotes")
-            if remoteFolder and remoteFolder:FindFirstChild("HitEvent") then
-                remoteFolder.HitEvent:FireServer()
-            end
-        end)
-    end
-
-    if settings.AutoFarm then
-        pcall(function()
-            local targetsFolder = Workspace:FindFirstChild("Balls") or Workspace:FindFirstChild("Enemies")
-            if targetsFolder then
-                for _, target in ipairs(targetsFolder:GetChildren()) do
-                    local targetPart = target:FindFirstChild("HumanoidRootPart") or (target:IsA("BasePart") and target)
-                    if targetPart then
-                        local distance = (humanoidRootPart.Position - targetPart.Position).Magnitude
-                        if distance > 15 then
-                            humanoid:MoveTo(targetPart.Position)
-                        end
-                        break
+            local arenaRemotes = ReplicatedStorage:FindFirstChild("ArenaRemotes")
+            if arenaRemotes then
+                for _, remote in ipairs(arenaRemotes:GetChildren()) do
+                    if remote:IsA("RemoteEvent") and (remote.Name:lower().match("hit") or remote.Name:lower().match("parry") or remote.Name:lower().match("swing")) then
+                        remote:FireServer()
                     end
                 end
             end
         end)
     end
 
-    if settings.AutoDodge then
+    -- ระบบ Auto Farm / เดินเข้าหาวัตถุใน Workspace อัตโนมัติ
+    if settings.AutoFarm then
         pcall(function()
-            local dangerFolder = Workspace:FindFirstChild("Projectiles") or Workspace:FindFirstChild("Skills")
-            if dangerFolder then
-                for _, skill in ipairs(dangerFolder:GetChildren()) do
-                    local part = skill:FindFirstChild("Handle") or (skill:IsA("BasePart") and skill)
-                    if part then
-                        local distance = (humanoidRootPart.Position - part.Position).Magnitude
-                        if distance <= 18 then
-                            local randomOffset = Vector3.new(math.random(-12, 12), 0, math.random(-12, 12))
-                            humanoid:MoveTo(humanoidRootPart.Position + randomOffset)
+            for _, obj in ipairs(Workspace:GetChildren()) do
+                if obj:IsA("BasePart") or obj:FindFirstChild("HumanoidRootPart") then
+                    local targetPart = obj:IsA("BasePart") and obj or obj.HumanoidRootPart
+                    if targetPart and targetPart ~= humanoidRootPart then
+                        local distance = (humanoidRootPart.Position - targetPart.Position).Magnitude
+                        if distance < 80 and distance > 10 then
+                            humanoid:MoveTo(targetPart.Position)
                             break
                         end
+                    end
+                end
+            end
+        end)
+    end
+
+    -- ระบบ Auto Dodge หลบวัตถุรอบตัว
+    if settings.AutoDodge then
+        pcall(function()
+            for _, obj in ipairs(Workspace:GetChildren()) do
+                if obj:IsA("BasePart") and obj ~= humanoidRootPart then
+                    local distance = (humanoidRootPart.Position - obj.Position).Magnitude
+                    if distance <= 15 then
+                        local randomOffset = Vector3.new(math.random(-15, 15), 0, math.random(-15, 15))
+                        humanoid:MoveTo(humanoidRootPart.Position + randomOffset)
+                        break
                     end
                 end
             end
