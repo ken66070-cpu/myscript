@@ -1,49 +1,68 @@
--- นำโค้ดนี้ไปรันหลังจากที่เปิดสคริปต์หลักของคุณขึ้นมาแล้ว
+local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
 
--- กำหนดคำศัพท์ที่ต้องการแปล (คำอังกฤษ = คำภาษาไทยที่ต้องการเปลี่ยน)
+-- รายการคำศัพท์ภาษาอังกฤษและคำแปลภาษาไทยที่คุณต้องการ
 local translations = {
-    ["Auto Farm"] = "ออโต้ฟาร์ม",
-    ["Auto Chest"] = "ออโต้เก็บกล่อง",
-    ["Auto Drop"] = "ออโต้เก็บของดรอป",
-    ["Auto Boss"] = "ออโต้ตีบอส",
-    ["Teleport"] = "วาร์ป",
-    ["Settings"] = "ตั้งค่า",
-    ["Combat"] = "ระบบต่อสู้",
-    ["Quests"] = "เควส",
-    ["Shop"] = "ร้านค้า",
-    ["Enable"] = "เปิด",
-    ["Disable"] = "ปิด"
+    ["Farm"] = "ฟาร์ม",
+    ["Quests, mobs, bosses and pickups"] = "เควส, มอนสเตอร์, บอส และของดรอป",
+    ["Quests & Mobs"] = "เควส & มอนสเตอร์",
+    ["Bosses"] = "บอส",
+    ["Caches"] = "แคช/กล่อง",
+    ["Schematics"] = "แปลน/คัมภีร์",
+    ["Craft & Refine"] = "คราฟต์ & ตีบวก",
+    ["Leveling"] = "เก็บเลเวล",
+    ["One Click Level Up"] = "อัปเลเวลคลิกเดียว",
+    ["Mobs"] = "มอนสเตอร์",
+    ["Auto Farm Mobs"] = "ออโต้ฟาร์มมอนสเตอร์",
+    ["Slayer Gourds"] = "ขวดปราณ (Gourds)",
+    ["Auto Gourd"] = "ออโต้ฝึกขวดปราณ",
+    ["Buy Gourds From Ren"] = "ซื้อขวดปราณจากเร็น",
+    ["Large Gourd"] = "ขวดปราณขนาดใหญ่",
+    ["Keep Wen"] = "เก็บเงินเวน (Wen)",
+    ["Status"] = "สถานะ",
+    ["Slayer Progress"] = "ความคืบหน้านักล่า",
+    ["Home"] = "หน้าแรก",
+    ["Cloud"] = "คลาวด์",
+    ["Market"] = "ตลาด",
+    ["Priority"] = "ลำดับความสำคัญ",
+    ["Player"] = "ผู้เล่น",
+    ["Webhook"] = "เว็บฮุค",
+    ["Settings"] = "ตั้งค่า"
 }
 
--- ฟังก์ชันคอยตรวจจับและเปลี่ยนข้อความอัตโนมัติ
-local function translateGui(node)
-    for _, descendant in ipairs(node:GetDescendants()) do
-        if descendant:IsA("TextLabel") or descendant:IsA("TextButton") or descendant:IsA("TextBox") then
-            local text = descendant.Text
-            if translations[text] then
-                descendant.Text = translations[text]
-            end
-            
-            -- คอยฟัง Event เผื่อข้อความมีการเปลี่ยนแปลงทีหลัง
-            descendant:GetPropertyChangedSignal("Text"):Connect(function()
-                if translations[descendant.Text] then
-                    descendant.Text = translations[descendant.Text]
-                end
-            end)
+-- ฟังก์ชันแปลงข้อความ
+local function applyTranslation(obj)
+    if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
+        local originalText = obj.Text
+        if translations[originalText] then
+            obj.Text = translations[originalText]
         end
+        -- คอยฟังการเปลี่ยนแปลงข้อความ
+        obj:GetPropertyChangedSignal("Text"):Connect(function()
+            if translations[obj.Text] then
+                obj.Text = translations[obj.Text]
+            end
+        end)
     end
 end
 
--- ค้นหาและแปลงข้อความใน CoreGui (ที่สคริปต์ส่วนใหญ่ชอบแสดงผล GUI)
-translateGui(CoreGui)
-
--- เผื่อกรณีสคริปต์โหลดหน้าต่างทีหลัง ให้คอยสแกนเพิ่ม
-CoreGui.DescendantAdded:Connect(function(child)
-    if child:IsA("TextLabel") or child:IsA("TextButton") or child:IsA("TextBox") then
-        if translations[child.Text] then
-            child.Text = translations[child.Text]
-        end
+-- สแกนใน PlayerGui และ CoreGui ทั้งหมด
+local function scanContainer(container)
+    for _, descendant in ipairs(container:GetDescendants()) do
+        applyTranslation(descendant)
     end
+    container.DescendantAdded:Connect(function(child)
+        task.wait(0.1) -- รอ UI โหลดแป๊บหนึ่ง
+        applyTranslation(child)
+    end)
+end
+
+pcall(function()
+    scanContainer(playerGui)
+    scanContainer(CoreGui)
 end)
+
+print("ระบบแปลภาษาไทยเริ่มทำงานแล้ว!")
 
